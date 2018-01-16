@@ -1,0 +1,109 @@
+=====JSTL=====
+참고자료 : 최범균 교재
+
+> JSTL(JSP Standard Tag Library)
+	JSP는 <jsp:include>와 같은 태그를 개발자가 추가할 수 있는 기능 제공 = 커스텀 태그
+	커스텀 태그 중에서 많이 사용되는 것들을 모아서 JSTL이라는 표준을 만들었음.
+	==> 스크립트릿 코드의 사용을 줄이면서 간결하고 이해하기 쉬운 JSP 코드 작성 가능
+
+> JSTL 태그 종류
+	코어태그
+		변수지원, 흐름제어, url처리. 접두어: c
+	국제화
+		숫자 및 날짜 형식. 접두어: fmt
+
+> JSTL 사용하기 전에
+	1. jstl.jar & standard.jar 다운로드 
+	2. lib폴더에 넣기
+
+> 코어태그
+	1) 변수 지원
+		set: JSP에서 사용할 변수를 설정
+		remove: 설정한 변수를 제거
+	2) 흐름 제어
+		if: 조건에 따라 내부 코드 수행
+		choose: 다중 조건을 처리할 때 사용된다
+		forEach: 컬렉션이나 Map의 각 항목을 처리할 때 사용된다
+		forTokens: 구분자로 분리된 각각의 토큰을 처리할 때 사용
+			* 토큰: lexical analysis의 단위를 가리키는 컴퓨터 용어
+				lexical analysis: 컴퓨터과학에서 프로그래밍 언어를 처리하는 최초의 단계.
+	3) URL 처리
+		import: url을 사용하여 다른 자원의 결과를 삽입
+		redirect: 지정한 경로로 리다이렉트
+		url: url을 재작성한다
+	4)기타 태그
+		catch: 익셉션을 처리할 때 사용한다
+		out: JspWriter에 내용을 출력한다
+
+> 코어 태그
+	<c:set>태그
+		<c:set var="변수명" value="값" [scope="영역"]/>
+		<c:set var="변수명" [scope="영역"]>값</c:set>
+			*scope: 변수를 저장할 영역을 지정. page, request, session, application 중 하나. 디폴트는 page
+	<c:if>태그 = 자바의 if와 비슷한 기능
+		<c:if test="조건" [var="테스트조건 결과"]>
+			~조건==true일때 처리할 내용~
+		</c:if>
+	<c:choose>,<c:when>,<c:otherwise>태그 = 자바의 switch + if~else~구문. 
+					         다수의 조건문을 하나의 블록에서 수행
+		<c:choose>
+			<c:when test="조건1"?
+				~조건1==true일때 실행~
+			</c:when>
+			<c:when test="조건2"?
+				~조건2==true일때 실행~
+			</c:when>
+			...
+			<c:otherwise>
+				~모든 when태그의 test결과값이 false이면 실행~
+			</c:otherwise>
+		</c:choose>
+	<c:forEach>태그
+		배열, Collection 또는 Map에 저장되어 있는 값들을 순차적으로 처리할 때 사용
+		자바의 for, do-while 등을 대신해서 사용할 수 있음
+		<c:forEach var="변수" items="아이템">
+			~변수사용해서 처리~
+		</c:forEach>
+			*item 속성에는 Map, 배열, Collection이 올 수 있다
+		<c:forEach var="변수" begin="시작값" end="끝값" [step="증가분"]>
+			~변수사용해서 처리~
+		</c:forEach>
+		<c:forEach var="변수" items="아이템" begin="시작값" end="끝값" [step="증가분"]>
+			~변수사용해서 처리~	//시작값부터 끝값의 인덱스까지 해당 아이템 값 참고
+		</c:forEach>
+		<c:forEach var="변수" items="아이템" varStatus="정보담을변수명">
+			~변수사용해서 처리~
+		</c:forEach>
+			*index, count, begin, end, step, first, last, current
+			(루프 실행에서 현재 인덱스, 루프실행횟수, begin,end,step속성값, 첫실행여부, 마지막실행여부, 현재루프의 객체)
+	<c:forTokens>태그
+		<c:forTokens var="변수명" items="문자열" delims="구분자">
+			~${변수명}의 사용~
+		</c:forTokens>
+	<c:catch>태그
+		발생된 익셉션을 EL변수에 저장할 대 사용되는 태그
+		<c:catch var="변수명">
+			~익셉션이 발생할 수 있는 코드~
+		</c:catch>
+			~~~~
+		${변수명}의 사용 
+			*예를들면 <c:if test="${ex!=null}"> 예외발생 </c:if> 이런식으로 사용
+
+> 국제화 태그
+	<fmt:formatNumber>태그
+		숫자를 양식에 맞춰 출력
+		<fmt:formatNumber value="숫자값" [type="값타입"] [pattern="패턴"] [var="변수명"] [scope="영역"]/>
+			* 타입: number(숫자형-기본값), percent(%형), currency(통화형)
+			* 패턴: #,###.00 이런식으로 지정
+			* var=포맷팅한 결과를 저장할 변수명. 타입은 String. 사용안하면 결과 바로 출력
+			* scope 변수를 저장할 영역 지정. 기본값은 page
+	<fmt:parseNumber>태그
+		문자열을 숫자(Number 타입)으로 변환해주는 기능
+	<fmt:formatDate>태그
+		날짜 정보를 담고 있는 객체를 포맷팅 하여 출력할때 사용
+		<fmt:formatDate value="날짜값" [type="값타입"] [dateStyle="날짜스타일"] [timeStyle="시간스타일"]
+			 [pattern="패턴"] [var="변수명"] [scope="영역"]/>
+			* type: 날짜, 시간, 둘다 포맷팅할지 여부. date(기본값), time, both
+			* dateStyle: default, short, medium, long, full
+			* timeStyle: default, short, medium, long, full
+	<fmt:formatDate>태그

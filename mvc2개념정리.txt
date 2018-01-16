@@ -1,4 +1,4 @@
-=====MVC2 정리===== 
+=====MVC2 정리=====
 참고자료 : 최범균 JSP 교재
 	  http://ilovebulk.tistory.com/5
 	  http://www.chaijeom.com/3/1360.html
