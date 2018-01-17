@@ -50,17 +50,18 @@ public class DAO {
 	public int dbCount(String skey, String sval) {	
 		//검색어 받아서 레코드 수 조회하기
 		int count = 0;
-		String sqry = "";	//지역변수 초기화
-		if(skey!=null && sval!=null && skey!="" && sval!="" ) {	//검색어, 검색조건이 존재할때(하나라도 null이면 안됨)
-			sqry = " where " + skey + " like '%" + sval + "%'";//검색 쿼리문
+		String sqry = " where " + skey + " like '%" + sval + "%'";
+		if(skey==null || sval==null || skey=="" || sval=="" ) {
+			sqry = "";
 		}
 		
 		try {
-			msg = "select count(*) as cnt from guest " + sqry;	//sqry가 ""여도 쿼리문 이상 없음 전체조회됨
-			ST = CN.createStatement();	
-			RS = ST.executeQuery(msg);	//쿼리 실행
-			RS.next();
-			count = RS.getInt("cnt");
+			msg = "select count(*) as cnt from guest " + sqry;
+			ST = CN.createStatement();
+			RS = ST.executeQuery(msg);
+			if (RS.next()) {
+				count = RS.getInt("cnt");
+			}
 		} catch(Exception ex) { }
 		return count;
 	}//dbCount end
@@ -68,17 +69,18 @@ public class DAO {
 	public ArrayList<Bean> dbSelect(int start, int end, String skey, String sval) {
 		//페이징&검색
 		ArrayList<Bean> list = new ArrayList<Bean>();
-		String sqry= "";
-		if(skey!=null && sval!=null && skey!="" && sval!="" ) {
-			sqry = " where " + skey + " like '%" + sval + "%'";
+		String sqry = " where " + skey + " like '%" + sval + "%'";
+		if(skey==null || sval==null || skey=="" || sval=="" ) {
+			sqry =" ";
 		}
 		try {
-			msg = "select * from ("
+			x = "select * from ("
 					+ " select rownum rn, g.* from "
-					+ " (select * from guest "+ sqry + " order by sabun ) g  "
-					+ ") where rn between " + start + " and " + end;
+					+ " (select * from guest "+ sqry + " order by sabun ) g ) "
+					+ " where rn between " + start + " and " + end;
+			System.out.println(x);
 			ST = CN.createStatement();
-			RS = ST.executeQuery(msg);
+			RS = ST.executeQuery(x);
 			while(RS.next()) {
 				Bean bean = new Bean();
 				bean.setRn(RS.getInt("rn"));

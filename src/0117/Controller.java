@@ -52,8 +52,12 @@ public class Controller extends HttpServlet {
 
 		String skey = "", sval = "", returnpage = "";	//검색조건, 검색어, 주소에 넣어줄 인자 값
 
-		skey = request.getParameter("keyfield");
-		sval = request.getParameter("keyword"); 
+		String a = request.getParameter("keyfield");
+		String b = request.getParameter("keyword"); 
+		 if(!(a == null || b == null)) {
+  		 skey = a;
+  		 sval = b;
+  	 }
 		returnpage = "&keyfield=" + skey + "&keyword=" + sval;
 
 		int Stotal = dao.dbCount(skey, sval);	//검색어 사용해서 조회한 레코드 수
