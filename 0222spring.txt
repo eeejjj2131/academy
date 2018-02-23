@@ -1,5 +1,5 @@
 STS0223 프로젝트
-|
+| 
 |-src/main/java(자동)	-> java 소스
 |	|-net.hb.order	//패키지
 |

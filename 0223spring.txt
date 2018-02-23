@@ -4,7 +4,7 @@ STS0223프로젝트
 |	|-패키지
 |
 |-src/main/resources -> 우클릭-new-package
-|	|-config.ibatis 패키지
+|	|-config.ibatis 패키지 
 |	|	|-guest.xml -> <insert id=add> insert into ... </insert>	//임의로 이름 준거
 |	|	|-SqlMapConfig.xml	=>쿼리문장 xml문서 여기서 취합
 |	|	|-dao-context.xml	//임의로 이름 준거
