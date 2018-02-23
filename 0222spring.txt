@@ -1,0 +1,236 @@
+STS0223 프로젝트
+|
+|-src/main/java(자동)	-> java 소스
+|	|-net.hb.order	//패키지
+|
+|-src/main/resources(자동) -> xml 문서
+|	|-config.ibatis	//패키지
+|
+|-src/main/webapp(자동) -> jsp 문서
+|	|-resources(자동)
+|	|	|-images
+|	|
+|	|-WEB-INF(자동)
+|	|	|-classes(자동)
+|	|	|-spring(자동)
+|	|	|    |-appServlet
+|	|	|    |	|-servlet-context.xml
+|	|	|    |
+|	|	|    |-root-context.xml
+|	|	|    
+|	|	|-views(자동)
+|	|	|    |-home.jsp(자동)
+|	|	|    |-guest.jsp
+|	|	|    |-guestList.jsp
+|	|	|
+|	|	|-web.xml(자동)
+|	|
+|	|-index.jsp(자동)
+|
+|-pom.xml(자동)
+
+
+java
+--------------------------
+jsp, (struts), spring 
+--------------------------
+html + css + javascript
+--------------------------
+jQuery + BootStrap
+
+
+구동(시작/처음) => 인식(로드)되는 문서 : web.xml
+WEB-INF 밑에 있는 web.xml문서를 처음 인식함.
+여기서 dispatcher확인문서가 servlet-context.xml
+===================================================================================================
+	<servlet>
+		<servlet-name>appServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/spring/root-context.xml</param-value>
+	</context-param>
+===================================================================================================
+servlet-context.xml --------------------------------
+	<context:component-scan base-package="net.hb.order" />
+
+web.xml에서 디스패쳐가 servlet-context.xml 인식 -> 맨 마지막에 java 패키지 스캔함
+-> net.hb.* 로 하면 net.hb 패키지 전부 인식 ==> 나중에 import하거나 할필요 없이 패키지 연결
+
+===================================================================================================
+여기에 추가로 우리가 작성할거: dao-context.xml 
+//경로: src/main/resources에 우클릭-패키지
+--> config.ibatis 패키지
+	|-dao-context.xml 만들기
+		|-db.properties
+		|-SqlMapConfig.xml	--> guest.xml
+		|-SqlMapClientTemplate 클래스
+
+==> xml 문서 3개 구동(web.xml, servlet-context.xml, dao-context.xml)
+
+스프링 실행하면서 구동되는애: pom.xml --> .m2\repository\* 랑 연결되어있음
+
+
+===================================================================================================
+===================================================================================================
+===================================================================================================
+view단에서부터 다시 거슬러올라가면서 설명
+
+guest.jsp -> GuestController.java로 -> GuestDAO.java -> guest.xml접근 
+		|- guest_insert()
+
+->guest.xml -> SqlMapConfig.xml -> dao-context.xml -> servlet-context.xml -> web.xml의 Dispatcher
+
++ pom.xml (web.xml이랑 크게 관련은 없지만 이거 두개가 암튼 구동됨)
+
+중간에 dao-context.xml ==>
+
+ db.properties   -----------------
+## oracle
+## oracle
+JDBC.driverClassName=oracle.jdbc.driver.OracleDriver
+JDBC.url=jdbc:oracle:thin:@127.0.0.1:1521:XE
+JDBC.username=system
+JDBC.password=oracle
+
+SqlMapConfing.xml -----------------
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMapConfig      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>
+    <settings enhancementEnabled="true" useStatementNamespaces="true"/>
+	<!-- sql 구문이 들어있는 파일 포함. -->
+  	 <sqlMap resource="config/ibatis/guest.xml"/> 
+</sqlMapConfig>
+
+---------------- class	==> guest.xml문서 id 접근하게 해줌
+    <bean id="sqlMapClient" class="org.springframework.orm.ibatis.SqlMapClientFactoryBean">
+        <property name="configLocation"   value="classpath:config/ibatis/SqlMapConfig.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <bean id="SqlMapClientTemplate" class="org.springframework.orm.ibatis.SqlMapClientTemplate">
+        <property name="sqlMapClient" ref="sqlMapClient"/>
+    </bean>
+
+
+
+
+==========================================================================================================================
+==========================================================================================================================
+==========================================================================================================================
+==========================================================================================================================
+
+
+< 0222 할것 >
+
+1. 
+net.hb.dto
+net.hb.dao
+만들기
+
+2. 
+servlet-context.xml
+작성
+
+3.
+index.jsp 문서에 a태그 추가 : GuestController.java 문서 -> @RequestMapping 
+
+4.
+views/guest.jsp 에서입력 --> GuestController.java로 전달
+	- request개체 이용해서 값전달x request안써요
+	- 매개인자에 DTO 넣고 get으로 가져오기
+	
+	@RequestMapping("/insert.do")
+	public String guest_insert(GuestDTO dto) {
+		System.out.println("컨트롤로 넘어온 사번 ="+dto.getSabun());
+		System.out.println("컨트롤로 넘어온 이름 ="+dto.getName());
+		System.out.println("컨트롤로 넘어온 제목 ="+dto.getTitle());
+		System.out.println("컨트롤로 넘어온 급여 ="+dto.getPay());
+		return "guestList"; // guestList.jsp
+	}// end
+	
+	
+		
+
+
+각각 DTO(매개인자, 리턴값으로 설정)에 의해서 다 연결
+XML  -  DAO  -  Controller  -  View
+쿼리	dto	dto		title
+
+* spring의 특징: 이름으로 연결/전달/매핑
+  우리가 하는 스프링 버전 : sts 4.x --> 서비스에 대한 것들을 @로 접근
+
+veiw, controller, dao  전부 =  db에 대한 내용 없음
+db에 대한 건 xml에서 전부 처리
+- xml태그로 쿼리문 기술함. 두가지 방법: iBatis(guest로 실습)
+					MyBatis(프로젝트는 이걸로 진행)
+	그냥 쓰는건 아니고 라이브러리 땡겨와야함
+-> pom.xml 에 기술 
+		<dependency>
+			<groupId>org.apache.ibatis</groupId>
+			<artifactId>ibatis-sqlmap</artifactId>
+			<version>2.3.4.726</version>
+		</dependency>
+
+-> .m2\repository\org\apache\ibatis폴더 생성됨	
+   Dependencies에 ibatis-sqlmap 생김   
+(==> 이게 maven 이라는 기술)
+
+http://www.mvnrepository.com/ -->에서 원하는거 다운받아서 쓸 수 있음
+
+5.
+컨트롤에서 다시 GuestDAO.java 문서로 이동
+
+	- DAO문서로 최종 데이터 넘기기
+		Controller에서 윗부분에 이거 써주기
+			@Autowired 
+			private GuestDAO dao; 	//선언만 해도 @때문에 new GuestDAO() 쓴거처럼 됨. 자동으로 연결
+			
+			@RequestMapping("/insert.do")
+			public String guest_insert(GuestDTO dto) {
+				dao.db_insert(dto);	//위에서 선언한 dao 사용
+				return "guestList"; // guestList.jsp
+			}// end
+
+		@Repository	//이거 써주기
+		public class GuestDAO {	//저장소 역할 = repository
+			
+			public void db_insert(GuestDTO dto) {
+				System.out.println("GuestDAO.java db_insert메서드");
+				System.out.println("DAO로 넘어온 사번 ="+dto.getSabun());
+				System.out.println("DAO로 넘어온 이름 ="+dto.getName());
+				System.out.println("DAO로 넘어온 제목 ="+dto.getTitle());
+				System.out.println("DAO로 넘어온 급여 ="+dto.getPay());
+			}// end
+			
+		}//class END
+
+6.(내일)
+GuestDAO.java 문서에서 guest.xml 문서 연결 저장하고 리스트 뿌리기
+월요일 - 한건 상세	
+
+==========================================================================================================================
+GuestDAO.java <- controller 접근
+GuestDTO.java <- DAO 접근
+
+GuestController.java <- jsp, DAO 접근
+
+-------------- servlet-context.xml -------------------------
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+무슨 의미냐면==>
+ "guestList" 라고 적으면(""안에 적어야함) 
+	-> 접두사=위치, 접미사=.jsp라는거
+	=> "/WEB-INF/views/guestList.jsp" 라는 의미

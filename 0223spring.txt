@@ -1,0 +1,173 @@
+STS0223프로젝트
+|
+|-src/main/java
+|	|-패키지
+|
+|-src/main/resources -> 우클릭-new-package
+|	|-config.ibatis 패키지
+|	|	|-guest.xml -> <insert id=add> insert into ... </insert>	//임의로 이름 준거
+|	|	|-SqlMapConfig.xml	=>쿼리문장 xml문서 여기서 취합
+|	|	|-dao-context.xml	//임의로 이름 준거
+|	|	
+|	|-db.properties -> db연결하는 애: [   ] = 값
+|
+|-src/main/webapp -> 뷰 & servlet-context.xml
+|
+|-pom.xml	//라이브러리 관리해줌(예전에 lib폴더에 넣었던것들)
+
+어제 만든 패키지 중에서
+net.hb.dao - GuestDAO.java --> 얘랑 guest.xml 연결해야함.(guest.xml에 있는 id값을 써야해서)
+
+서버 구동하면 자동 인식되는 애들: pom.xml & web.xml & web.xml에 있는 디스패쳐가 인식하는 servlet-context.xml 
+이거 빼고는 서버가 자동인식 x
+=>그러면 guest.xml 인식하려면 어떻게 해야할까?
+일단 servlet-context.xml에서 dao-context.xml 연결할거임
+	* dao-context.xml 역할
+		세가지 연결
+	 	 - db.properties 연결 (앞부분)
+		 - SqlMapConfig.xml 연결 (마지막부분)
+		 - SqlMapClientTemplate 클래스 (맨마지막)
+그런다음 SqlMapConfig.xml에서 guest.xml 연결할거임
+그리고 SqlMapClientTemplate 클래스로 guest.xml문서의 id 접근
+
+--------------------------------다시설명~~~~---------------------------------------------------------
+
+자동으로 있는 xml
+자동구동
+	web.xml -> 명시된 xml
+	pom.xml
+	root-context.xml <- 사용안함
+	servlet-context.xml <- 얘는 사용 추천
+	
+WEB-INF
+|
+|-spring
+|   |-appServlet
+|   |    |-servlet-context.xml 	=> dao-context.xml 땡겨옴(참조)
+|   |
+|   |-root-context.xml
+|
+|-views 자동폴더
+|   |-guest.jsp
+|   |-guestList.jsp
+|   |-home.jsp
+|
+|-web.xml
+
+* dao-context.xml위치
+src/main/resources
+|
+|-config.ibatis (우리가 생성)
+|	|-guest.xml -> id명명을 GuestDAO.java에서 접근함. dao<-controller <- view단
+|	|-SqlMapConfig.xml ->guest.xml접근
+|	|-dao-context.xml ==> 참조 3가지: db.properties, SqlMapConfig.xml, SqlMapClientTemplate클래스
+|
+|-db.properties(우리가 생성..전자정부프레임워크에서 참고해서 이름지음 - 거기선 global.properties)
+
+
+
+
+----------------------------흐름 view부터 또 다시 정리~~~----------------------------------
+view단: ~~~.jsp
+->GuestController.java
+->GuestDAO.java
+->guest.xml문서 id접근
+->SqlMapConfig.xml
+->dao-context.xml
+->servlet-context.xml
+->web.xml문서에서 디스패쳐서블릿으로 servlet-context.xml참조
+
+----------------------------흐름 구동부터 또 다시 정리~~~----------------------------------
+web.xml 인식
+-> 거기서 DispatcherServlet이 servlet-context.xml 인식
+-> servlet-context.xml에서 dao-context.xml 인식
+->dao-context.xml에서  db.properties, SqlMapConfig.xml, SqlMapClientTemplate클래스 인식
+-> 이중에서 SqlMapConfig.xml에서 guest.xml문서
+-> guset.xml문서에서 id접근
+-> guestDAO.java - GuestController.java - guest.jsp 연결~
+
+
+우리가 할 코딩: servlet-context.xml 에서 연결작업 하면됨~
+
+나머지 파일은 갖다 붙이기만 하면됨~
+
+
+
+
+
+
+=========================guest.xml================================
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMap      
+    PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"      
+    "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+ <sqlMap  namespace="guest">
+<!-- 아이디 중복일때 namespace를 줘서 guest.add 이런식으로 쓰면 중복id 문제 피할수 있음 -->
+ 	<typeAlias alias="dt" type="net.hb.dto.GuestDTO"/>
+
+	<insert id="add">
+	    insert into guest(sabun,name,title,nalja, pay)
+	    values( #sabun#, #name#, #title#, sysdate, #pay# )
+	</insert>
+ 	
+ <!-- selectAll789검색기능에 페이징추가  -->
+ <select id="selectAll789" parameterClass="net.hb.dto.GuestDTO" resultClass="net.hb.dto.GuestDTO">
+   select * from (
+     select rownum as rn, sabun, name, title, nalja, pay from 
+      (select * from guest where $skey$ like '%' || #sval# || '%' )
+   )where rn between  #start#  and  #end#  
+</select>
+
+ 	
+ 	<!-- selectAll2건드리지 마세요  -->
+    <select id="selectAll"  resultClass="net.hb.dto.GuestDTO">
+ 	   select * from guest order by sabun   
+ 	</select>
+ 	
+ 	<select id="detail" resultClass="net.hb.dto.GuestDTO">
+ 	  select  * from  guest  where sabun=#sabun#
+ 	</select>
+ 	
+ 	<delete id="del">
+ 	   delete from guest  where sabun = #sabun#
+ 	</delete>
+ 	
+ 	<select id="countAll"  resultClass="int">
+ 	   select  count(*) as cnt from guest
+ 	</select>
+  	
+ 	<update id="edit">
+ 	  update guest set name=#name#, title=#title#, nalja=sysdate,
+ 	  pay=#pay# where sabun=#sabun# 
+ 	</update>
+ 	
+ </sqlMap>   
+
+
+====================guestDAO.java=======================================
+@Repository
+public class GuestDAO { // 저장소 역할 = repository
+
+	@Autowired
+	private SqlMapClientTemplate temp;
+
+	public void db_insert(GuestDTO dto) {
+		temp.insert("guest.add", dto);
+		System.out.println("GuestDAO.java db_insert() 저장성공");
+	}// end
+
+	
+}// class END
+
+
+
+
+
+* servlet-context.xml에서 dao-context.xml 연결하기
+
+	<resources mapping="/resources/**" location="/resources/" /> 
+	
+	<!-- dao-context.xml 연결 -->
+	<beans:import resource="classpath:/config/ibatis/dao-context.xml"/>

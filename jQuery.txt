@@ -1,0 +1,33 @@
+$(doucment).ready(function () {
+
+id立辟: #id
+class立辟: .class
+
+
+});
+
+jQuery(doucment).ready(function () {
+
+id立辟: #id
+class立辟: .class
+
+
+});
+
+
+jQuery(function () {
+
+id立辟: #id
+class立辟: .class
+
+
+});
+
+
+$(function () {
+
+id立辟: #id
+class立辟: .class
+
+
+});
